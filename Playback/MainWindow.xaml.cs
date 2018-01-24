@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 using Microsoft.Win32;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
+using System.Windows.Threading;
 
 namespace Playback
 {
@@ -26,11 +27,28 @@ namespace Playback
 
         private Mp3FileReader reader;
         private WaveOut output;
+        DispatcherTimer timer;
         
         public MainWindow()
         {
             InitializeComponent();
+            timer = new DispatcherTimer();
+            timer.Interval = TimeSpan.FromMilliseconds(100);
+            timer.Tick += OnTimerTick;
+
+            sldPosition.DragLeave += sldPosition_dragCompleted;
+           
         }
+
+        private void OnTimerTick(object sender, EventArgs e)
+        {
+            if(reader != null)
+            {
+                lblPosition.Text = reader.CurrentTime.ToString();
+                sldPosition.Value = reader.CurrentTime.TotalSeconds;
+            }
+        }
+
 
         private void btnBuscar_Click(object sender, RoutedEventArgs e)
         {
@@ -54,6 +72,17 @@ namespace Playback
                 output.Init(reader);
                 output.Play();
 
+                btnStop.IsEnabled = true;
+                btnPlay.IsEnabled = false;
+
+                lblDuration.Text = reader.TotalTime.ToString();
+                lblPosition.Text = reader.CurrentTime.ToString();
+                sldPosition.Maximum = reader.TotalTime.TotalSeconds;
+                sldPosition.Value = 0;
+
+                timer.Start();
+
+
 
             }
             else
@@ -66,6 +95,7 @@ namespace Playback
         {
             reader.Dispose();
             output.Dispose();
+            timer.Stop();
         }
 
         private void btnStop_Click(object sender, RoutedEventArgs e)
@@ -73,10 +103,18 @@ namespace Playback
             if(output != null)
             {
                 output.Stop();
+                btnPlay.IsEnabled = true;
+                btnStop.IsEnabled = false;
             }
         }
 
-
+        private void sldPosition_dragCompleted(object sender, RoutedEventArgs e)
+        {
+            if(reader != null)
+            {
+                reader.CurrentTime = TimeSpan.FromSeconds(sldPosition.Value);
+            }
+        }
 
     }
 }
