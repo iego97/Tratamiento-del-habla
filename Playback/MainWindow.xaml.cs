@@ -28,24 +28,28 @@ namespace Playback
         private Mp3FileReader reader;
         private WaveOut output;
         DispatcherTimer timer;
+        bool dragging = false;
         
         public MainWindow()
         {
             InitializeComponent();
             timer = new DispatcherTimer();
-            timer.Interval = TimeSpan.FromMilliseconds(100);
+            timer.Interval = TimeSpan.FromMilliseconds(1000);
             timer.Tick += OnTimerTick;
 
-            sldPosition.DragLeave += sldPosition_dragCompleted;
+            
            
         }
 
         private void OnTimerTick(object sender, EventArgs e)
         {
-            if(reader != null)
+            if(reader != null && !dragging )
             {
                 lblPosition.Text = reader.CurrentTime.ToString();
                 sldPosition.Value = reader.CurrentTime.TotalSeconds;
+
+                
+               
             }
         }
 
@@ -108,11 +112,22 @@ namespace Playback
             }
         }
 
+      
+
         private void sldPosition_dragCompleted(object sender, RoutedEventArgs e)
         {
             if(reader != null)
             {
                 reader.CurrentTime = TimeSpan.FromSeconds(sldPosition.Value);
+                dragging = false;
+            }
+        }
+
+        private void sldPosition_dragStarted(object sender, RoutedEventArgs e)
+        {
+            if(reader != null)
+            {
+                dragging = true;
             }
         }
 
